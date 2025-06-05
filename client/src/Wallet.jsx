@@ -1,74 +1,73 @@
 import server from "./server";
-import * as secp from "ethereum-cryptography/secp256k1";
-import * as keccak from "ethereum-cryptography/keccak";
-import * as utils from "ethereum-cryptography/utils";
 
 function Wallet({
   address,
   setAddress,
   balance,
   setBalance,
-  privateKey,
-  setPrivateKey,
+  secretMsg,
+  setSecretMsg,
+  signature,
+  setSignature,
 }) {
-  //
-  //   async function onChange(evt) {
-  //   const address = evt.target.value;
-  //   setAddress(address);
-  //   if (address) {
-  //     const {
-  //       data: { balance },
-  //     } = await server.get(`balance/${address}`);
-  //     setBalance(balance);
-  //   } else {
-  //     setBalance(0);
-  //   }
-  // }
-
   async function onChange(evt) {
-    const privateKey = evt.target.value;
-    setPrivateKey(privateKey);
+    const { name, value } = evt.target;
 
-    const publicKey = secp.getPublicKey(privateKey, false);
+    // Update the appropriate state
+    if (name === "secretMsg") {
+      setSecretMsg(value);
+    } else if (name === "signature") {
+      setSignature(value);
+    }
 
-    // Drop the first byte (0x04), use only the 64-byte X+Y part
-    const pubKeyWithoutPrefix = publicKey.slice(1); // 64 bytes
+    // Use local variables to get updated values before state updates fully propagate
+    const updatedSecretMsg = name === "secretMsg" ? value : secretMsg;
+    const updatedSignature = name === "signature" ? value : signature;
 
-    // Hash the public key with keccak256
-    const hashed = keccak.keccak256(pubKeyWithoutPrefix);
+    // Only proceed if both are filled
+    if (updatedSecretMsg && updatedSignature) {
+      try {
+        const {
+          data: { address, balance },
+        } = await server.get("/balance", {
+          params: {
+            secretMsg: updatedSecretMsg,
+            signature: updatedSignature,
+          },
+        });
 
-    // Take the last 20 bytes
-    // Convert to hex address
-    setAddress("0x" + utils.toHex(hashed).slice(-20));
-
-    if (address) {
-      const {
-        data: { balance },
-      } = await server.get(`balance/${address}`);
-      setBalance(balance);
+        setAddress(address);
+        setBalance(balance);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+        setAddress("");
+        setBalance(0);
+      }
     } else {
+      setAddress("");
       setBalance(0);
     }
   }
-
   return (
     <div className="container wallet">
       <h1>Your Wallet</h1>
 
-      {/* <label> */}
-      {/*   Wallet Address */}
-      {/*   <input */}
-      {/*     placeholder="Type an address, for example: 0x1" */}
-      {/*     value={address} */}
-      {/*     onChange={onChange} */}
-      {/*   ></input> */}
-      {/* </label> */}
-      {/**/}
       <label>
-        Private Key
+        Secret message
         <input
-          placeholder="Type your private key (hex)"
-          value={privateKey}
+          name="secretMsg"
+          placeholder="Type your secret message"
+          value={secretMsg}
+          onChange={onChange}
+        ></input>
+      </label>
+
+      <label>
+        Signature
+        <input
+          name="signature"
+          placeholder="Signature"
+          value={signature}
           onChange={onChange}
         ></input>
       </label>
