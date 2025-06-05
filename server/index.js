@@ -1,4 +1,6 @@
 const express = require("express");
+const myUtils = require("./myUtils.js");
+
 const app = express();
 const cors = require("cors");
 const port = 3042;
@@ -7,17 +9,40 @@ app.use(cors());
 app.use(express.json());
 
 const balances = {
-  "0xefe11fd4ec38f0c38f68": 95,
-  "0xd60dee575702a2a3a81f": 100,
-  "0x1c04a43e70e88bcf179c": 50,
+  "0xd987a27f4513980d64b5": 95,
+  "0x514b32b0918e1db65542": 100,
+  "0xef7c3345979803d153fb": 50,
 };
 
-app.get("/balance/:address", (req, res) => {
-  const { address } = req.params;
+app.get("/balance", (req, res) => {
+  const { secretMsg, signature } = req.query;
+
+  if (!secretMsg || !signature) {
+    return res
+      .status(400)
+      .send({ error: "secretMsg and signature are required" });
+  }
+
+  const address = myUtils.getAddressFromSecretMsg(secretMsg, signature);
   const balance = balances[address] || 0;
-  res.send({ balance });
+  res.send({ address, balance });
 });
 
+// app.get("/balance/:secretMsg", (req, res) => {
+//   const { secretMsg, signature } = req.params;
+//
+//   const address = myUtils.getAddressFromSecretMsg(secretMsg, signature);
+//
+//   const balance = balances[address] || 0;
+//   res.send({ balance });
+// });
+
+// app.get("/balance/:address", (req, res) => {
+//   const { address } = req.params;
+//   const balance = balances[address] || 0;
+//   res.send({ balance });
+// });
+//
 app.post("/send", (req, res) => {
   // TODO - Get a signature from the client-side application
   // recover the public address from the signature
