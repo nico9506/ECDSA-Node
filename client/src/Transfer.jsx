@@ -19,6 +19,7 @@ function Transfer({ address, setBalance }) {
         recipient,
       });
       setBalance(balance);
+      alert(`Transaction confirmed. Balance: ${balance}`);
     } catch (ex) {
       alert(ex.response.data.message);
     }

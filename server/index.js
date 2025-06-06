@@ -28,25 +28,7 @@ app.get("/balance", (req, res) => {
   res.send({ address, balance });
 });
 
-// app.get("/balance/:secretMsg", (req, res) => {
-//   const { secretMsg, signature } = req.params;
-//
-//   const address = myUtils.getAddressFromSecretMsg(secretMsg, signature);
-//
-//   const balance = balances[address] || 0;
-//   res.send({ balance });
-// });
-
-// app.get("/balance/:address", (req, res) => {
-//   const { address } = req.params;
-//   const balance = balances[address] || 0;
-//   res.send({ balance });
-// });
-//
 app.post("/send", (req, res) => {
-  // TODO - Get a signature from the client-side application
-  // recover the public address from the signature
-
   const { sender, recipient, amount } = req.body;
 
   setInitialBalance(sender);
